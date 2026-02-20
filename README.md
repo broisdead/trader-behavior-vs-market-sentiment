@@ -1,172 +1,236 @@
-# trader-behavior-vs-market-sentiment
 Trader Behavior vs Market Sentiment Analysis
-Overview
+Project Overview
 
-Financial markets are influenced not only by fundamentals and technical indicators, but also by collective human behavior. In markets characterized by high volatility—such as cryptocurrency trading—emotions like fear and greed play a critical role in shaping trader decisions.
+This project analyzes how trader behavior and performance vary across different market sentiment regimes using the Fear & Greed Index. The objective is to determine whether sentiment impacts trader profitability, risk-taking behavior, and trading patterns.
 
-This project examines how trader behavior varies across different market sentiment regimes by integrating historical trading data with the Crypto Fear & Greed Index. The analysis focuses on understanding how profitability, risk exposure, trading volume, and directional bias change under varying emotional conditions in the market.
+Part A — Data Preparation
+1. Dataset Loading and Inspection
 
-Rather than treating sentiment as a direct price predictor, this study evaluates sentiment as a behavioral and risk-regime indicator, providing insights into when traders tend to act conservatively, aggressively, or opportunistically.
+Two datasets were used:
 
-Objectives
+historical_data.csv → Individual trade-level data
 
-The primary goals of this analysis are to:
+fear_greed_index.csv → Daily sentiment index
 
-Examine how trader profitability (PnL) varies across sentiment regimes
+Dataset Dimensions
 
-Study changes in risk-taking behavior using trade size and return volatility
+Trades dataset: 211,224 rows, 16 columns
 
-Analyze trading volume during periods of fear and greed
+Sentiment dataset: 2,644 rows, 4 columns
 
-Understand directional bias through buy/sell ratios
+Data Cleaning
 
-Evaluate whether market sentiment offers predictive value or primarily reflects behavioral conditions
+Missing values checked → None found
 
-Key Findings
+Duplicate rows checked → Removed if present
 
-Trader profitability is most consistent during Fear regimes, rather than during Greed.
+Timestamps converted using:
 
-Extreme Greed produces occasional large profits, but is accompanied by significantly higher volatility and downside risk.
+%d-%m-%Y %H:%M
 
-Buying pressure is strongest during Extreme Fear, indicating contrarian accumulation behavior.
+Daily-level alignment performed using date column
 
-Market sentiment shows little direct correlation with next-day PnL, but strongly influences trading behavior and risk exposure.
+Inner merge used to align trade data with sentiment data
 
-Overall, sentiment functions better as a behavioral and risk-context indicator than as a short-term forecasting signal.
+Merged dataset size: 211,218 rows
 
-Repository Structure
-trader-behavior-vs-market-sentiment/
-│
-├── data/
-│   ├── historical_data.csv        # Trader transaction records
-│   └── fear_greed_index.csv       # Market sentiment data
-│
-├── notebooks/
-│   └── trader_sentiment_analysis.ipynb
-│
-├── reports/
-│   └── analysis_report.md         # Optional written analysis
-│
-├── requirements.txt
-└── README.md
+2. Feature Engineering
 
-Data Description
-Trader Behavior Data
+The following key metrics were created:
 
-The trader dataset contains transaction-level records, which are aggregated at a daily level. Key variables used include:
+Daily PnL per Trader
 
-Timestamp (IST)
+Aggregated Closed PnL per account per day
 
-Trade size (USD)
+Win Rate
 
-Trade direction (Buy/Sell)
+Trade considered a win if Closed PnL > 0
 
-Closed profit and loss (PnL)
+Win rate computed per trader
 
-Transaction fees
+Average Trade Size
 
-From these, daily metrics such as total PnL, average trade size, total volume, and buy/sell ratios are derived.
+Mean of Size USD
 
-Market Sentiment Data
+Computed overall, per trader, and per day
 
-Market sentiment is captured using the Crypto Fear & Greed Index, which classifies market mood into five regimes:
+Leverage Proxy
 
-Extreme Fear
+Since leverage was not directly available, Size USD was used as a risk exposure proxy.
 
-Fear
+Higher position size implies greater capital exposure and effective leverage behavior.
 
-Neutral
+Number of Trades per Day
 
-Greed
+Count of trades grouped by date
 
-Extreme Greed
+Long/Short Ratio
 
-Sentiment data is aligned with trading data on a daily basis to ensure temporal consistency.
+BUY vs SELL counts per day
 
-Methodology
+Long/Short ratio computed accordingly
 
-The analysis follows a structured exploratory workflow:
+Part B — Analysis
+1. Sentiment Categorization
 
-Data cleaning and preprocessing
+Sentiment index was categorized into:
 
-Daily aggregation of trader behavior metrics
+Fear (0–40)
 
-Alignment of trading data with sentiment regimes
+Neutral (40–60)
 
-Exploratory data analysis using visualizations
+Greed (60–100)
 
-Distributional analysis (mean, median, volatility)
+2. Performance Comparison Across Sentiment
+Average PnL by Sentiment
 
-Lagged sentiment analysis and rank-based correlation testing
+Average Closed PnL computed for each sentiment category.
 
-Statistical methods are chosen to be robust to outliers and heavy-tailed financial data.
+Win Rate by Sentiment
 
-Setup and Installation
-Requirements
+Win rate calculated as proportion of profitable trades within each regime.
 
-Python 3.8 or higher
+Risk Proxy (Drawdown Approximation)
 
-Jupyter Notebook or Google Colab
+Standard deviation of Closed PnL used as volatility proxy.
 
-Installation
+This captures risk and variability in trader performance.
 
-(Optional) Create a virtual environment:
+3. Behavioral Changes Across Sentiment
 
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+The following behavioral metrics were compared across regimes:
 
+Trade Frequency
 
-Install dependencies:
+Number of trades executed in Fear, Neutral, and Greed periods.
 
-pip install -r requirements.txt
+Position Size (Risk Proxy)
 
-Dependencies
-pandas
-numpy
-matplotlib
-seaborn
-scipy
+Average Size USD compared across sentiment.
 
-How to Run
+Long/Short Bias
 
-Place the datasets in the data/ directory
+Distribution of BUY vs SELL trades by sentiment category.
 
-Open the notebook:
+4. Trader Segmentation
 
-jupyter notebook notebooks/trader_sentiment_analysis.ipynb
+Three behavioral segments were identified:
 
+1. High vs Low Exposure Traders
 
-Run the notebook sequentially to reproduce the analysis and visualizations
+Based on median split of Size USD
 
-Limitations
+2. Frequent vs Infrequent Traders
 
-Sentiment indices reflect aggregate market mood, not individual trader intent
+Based on median trade count per account
 
-Daily aggregation may mask intraday dynamics
+3. Consistent vs Inconsistent Traders
 
-Results are observational and do not imply causality
+Based on standard deviation of Closed PnL
 
-Findings are specific to the dataset and market conditions studied
+Low volatility → Consistent
 
-Future Improvements
+High volatility → Inconsistent
 
-Potential extensions of this work include:
+Cluster performance comparisons were computed for each segment.
 
-Risk-adjusted performance metrics (Sharpe, Sortino)
+Key Insights
 
-Quantile-based and regime-switching models
+Performance differs significantly across sentiment regimes. Fear periods show lower average PnL and higher volatility, indicating elevated downside risk.
 
-Strategy backtesting using sentiment filters
+Traders exhibit increased trade frequency and larger position sizes during Greed periods, suggesting higher risk-taking behavior under optimistic conditions.
 
-Intraday sentiment alignment
+Frequent and high-exposure traders generate higher average returns but experience greater volatility. Consistent traders demonstrate more stable returns with lower variance.
 
-Clustering or segmentation of trader behavior
+Part C — Actionable Strategy Recommendations
 
-Author
+Based on the findings, the following strategy rules are proposed:
 
-Aiyan
-Data Science | Behavioral Finance | Market Analysis
+During Fear regimes, reduce exposure and avoid high leverage positions to mitigate elevated volatility and downside risk.
 
-Final Note
+During Greed regimes, allow increased trade frequency but implement risk controls (position size caps) to prevent overconfidence-driven losses.
 
-This project highlights the importance of behavioral context in trading decisions. Market sentiment does not reliably predict short-term returns, but it strongly shapes how traders allocate risk, respond to uncertainty, and behave under emotional extremes.
+Prefer consistent traders during uncertain sentiment periods, as they exhibit lower return volatility.
+
+Bonus Section
+1. Predictive Model
+
+A logistic regression model was built to predict next-day profitability bucket using:
+
+Average position size
+
+Win rate
+
+Sentiment index
+
+Target:
+
+1 → Next-day positive PnL
+
+0 → Next-day negative PnL
+
+Model evaluation included accuracy and classification metrics.
+
+2. Trader Clustering
+
+K-Means clustering was applied using:
+
+Average PnL
+
+Trade frequency
+
+Average position size
+
+Win rate
+
+Three behavioral archetypes were identified:
+
+Conservative Traders
+
+Aggressive High-Exposure Traders
+
+High-Frequency Speculators
+
+Cluster summary statistics were analyzed to interpret behavioral patterns.
+
+3. Streamlit Dashboard
+
+A lightweight Streamlit dashboard was implemented featuring:
+
+Sentiment filter
+
+Total trade count
+
+Average Closed PnL display
+
+Interactive data exploration
+
+This provides an intuitive interface for analyzing trader behavior across sentiment regimes.
+
+Conclusion
+
+This project demonstrates that market sentiment significantly influences trader performance and behavior.
+
+Key findings indicate:
+
+Fear regimes increase volatility and downside risk
+
+Greed regimes increase trade frequency and risk exposure
+
+Behavioral segmentation reveals substantial differences in risk-adjusted performance
+
+These insights can inform adaptive trading strategies aligned with market sentiment.
+
+Technologies Used
+
+Python
+
+Pandas
+
+NumPy
+
+Matplotlib
+
+Scikit-learn
+
+Streamlit
